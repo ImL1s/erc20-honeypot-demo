@@ -1,0 +1,11 @@
+node_modules
+dist
+cache
+artifacts
+.env
+.env.local
+.next
+coverage
+typechain-types
+npm-debug.log*
+*.tsbuildinfo
