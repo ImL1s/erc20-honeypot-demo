@@ -39,6 +39,14 @@ npm run dev
 2) 點「買入 / faucet」取得 PIXIU（成功）。
 3) 點「嘗試賣出」轉回合約 owner（視為賣出），會因黑名單或嚴格模式 revert，UI 顯示錯誤訊息。
 
+## Lint / E2E 測試
+- Lint：`npm run lint`（使用 eslint + eslint-config-next）。
+- E2E：`npm run test:e2e`（Playwright，預設自啟開發伺服器在 3002）。
+  - 若本機已跑 `npm run dev` 在 3001，可重用：
+    ```bash
+    PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3001 npm run test:e2e
+    ```
+
 ## 風險提示 / 要檢查的紅旗
 - `transfer/transferFrom` 內嵌黑名單或怪條件。
 - owner 權限未移除，可隨時開啟黑名單或嚴格模式。

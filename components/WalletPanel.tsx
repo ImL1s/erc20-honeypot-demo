@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useAccount,
   useConnect,
@@ -72,8 +72,7 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
     abi: pixiuAbi,
     functionName: "owner",
     query: {
-      enabled: hasContract,
-      onSuccess: (ownerAddr) => setSellTarget(ownerAddr as `0x${string}`)
+      enabled: hasContract
     }
   });
 
@@ -93,17 +92,27 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
   });
 
   // Refresh balance after tx
-  useWaitForTransactionReceipt({
+  const receiptQuery = useWaitForTransactionReceipt({
     hash: actionTx,
     query: {
-      enabled: Boolean(actionTx),
-      onSuccess: () => {
-        balanceQuery.refetch();
-        blacklistQuery.refetch();
-        // ethBalance automatically refreshes via wagmi
-      }
+      enabled: Boolean(actionTx)
     }
   });
+
+  // keep sell target in sync with owner address when fetched
+  useEffect(() => {
+    if (ownerQuery.data) {
+      setSellTarget(ownerQuery.data as `0x${string}`);
+    }
+  }, [ownerQuery.data]);
+
+  // refresh balance/blacklist once tx confirmed
+  useEffect(() => {
+    if (receiptQuery.isSuccess) {
+      balanceQuery.refetch();
+      blacklistQuery.refetch();
+    }
+  }, [receiptQuery.isSuccess, balanceQuery, blacklistQuery]);
 
   const handleAction = async () => {
     if (!address) return;
@@ -168,7 +177,7 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
   };
 
   const balance = balanceQuery.isFetched && isConnected
-    ? Number(formatEther((balanceQuery.data as bigint) || 0)).toLocaleString()
+    ? Number(formatEther((balanceQuery.data as bigint) ?? 0n)).toLocaleString()
     : "0";
 
   return (
