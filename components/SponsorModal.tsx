@@ -1,21 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther } from "viem";
+import { useState, useEffect } from "react";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useWriteContract, useSwitchChain, useChainId } from "wagmi";
+import { parseEther, parseUnits } from "viem";
+import { mainnet, polygon, bsc, arbitrum, optimism, base } from "wagmi/chains";
 
 const WALLET_ADDRESS = "0x889A5fDa61adA9E99f75A53c323e32430d1C34d8" as `0x${string}`;
 
-const SUPPORTED_NETWORKS = [
-  { name: "Ethereum", icon: "⟠", color: "bg-blue-100 text-blue-700" },
-  { name: "Polygon", icon: "⬡", color: "bg-purple-100 text-purple-700" },
-  { name: "BSC", icon: "⬢", color: "bg-yellow-100 text-yellow-700" },
-  { name: "Arbitrum", icon: "🔵", color: "bg-sky-100 text-sky-700" },
-  { name: "Optimism", icon: "🔴", color: "bg-red-100 text-red-700" },
-  { name: "Base", icon: "🔷", color: "bg-indigo-100 text-indigo-700" },
+// USDT contract addresses on different chains
+const USDT_ADDRESSES: Record<number, `0x${string}`> = {
+  [mainnet.id]: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+  [polygon.id]: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+  [bsc.id]: "0x55d398326f99059fF775485246999027B3197955",
+  [arbitrum.id]: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+  [optimism.id]: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+  [base.id]: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base (no native USDT)
+};
+
+// ERC20 transfer ABI
+const ERC20_ABI = [
+  {
+    name: "transfer",
+    type: "function",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+const SUPPORTED_CHAINS = [
+  { id: mainnet.id, name: "Ethereum", icon: "⟠", color: "bg-blue-100 text-blue-700", native: "ETH", decimals: 18 },
+  { id: polygon.id, name: "Polygon", icon: "⬡", color: "bg-purple-100 text-purple-700", native: "MATIC", decimals: 18 },
+  { id: bsc.id, name: "BSC", icon: "⬢", color: "bg-yellow-100 text-yellow-700", native: "BNB", decimals: 18 },
+  { id: arbitrum.id, name: "Arbitrum", icon: "🔵", color: "bg-sky-100 text-sky-700", native: "ETH", decimals: 18 },
+  { id: optimism.id, name: "Optimism", icon: "🔴", color: "bg-red-100 text-red-700", native: "ETH", decimals: 18 },
+  { id: base.id, name: "Base", icon: "🔷", color: "bg-indigo-100 text-indigo-700", native: "ETH", decimals: 18 },
 ];
 
-const PRESET_AMOUNTS = ["0.001", "0.005", "0.01", "0.05"];
+const PRESET_AMOUNTS_NATIVE = ["0.001", "0.005", "0.01", "0.05"];
+const PRESET_AMOUNTS_USDT = ["1", "5", "10", "20"];
 
 interface SponsorModalProps {
   isOpen: boolean;
@@ -26,10 +51,33 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
   const [copied, setCopied] = useState(false);
   const [amount, setAmount] = useState("0.005");
   const [txSuccess, setTxSuccess] = useState(false);
+  const [tokenType, setTokenType] = useState<"native" | "usdt">("native");
+  const [selectedChainId, setSelectedChainId] = useState<number>(mainnet.id);
 
   const { isConnected } = useAccount();
-  const { data: hash, isPending, sendTransaction, reset } = useSendTransaction();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+
+  // Native transfer
+  const { data: nativeHash, isPending: nativePending, sendTransaction, reset: resetNative } = useSendTransaction();
+  const { isLoading: nativeConfirming, isSuccess: nativeSuccess } = useWaitForTransactionReceipt({ hash: nativeHash });
+
+  // ERC20 transfer
+  const { data: erc20Hash, isPending: erc20Pending, writeContract, reset: resetErc20 } = useWriteContract();
+  const { isLoading: erc20Confirming, isSuccess: erc20Success } = useWaitForTransactionReceipt({ hash: erc20Hash });
+
+  const isPending = nativePending || erc20Pending;
+  const isConfirming = nativeConfirming || erc20Confirming;
+  const isSuccess = nativeSuccess || erc20Success;
+  const hash = nativeHash || erc20Hash;
+
+  const selectedChain = SUPPORTED_CHAINS.find(c => c.id === selectedChainId) || SUPPORTED_CHAINS[0];
+  const presetAmounts = tokenType === "native" ? PRESET_AMOUNTS_NATIVE : PRESET_AMOUNTS_USDT;
+
+  // Update amount when switching token type
+  useEffect(() => {
+    setAmount(tokenType === "native" ? "0.005" : "5");
+  }, [tokenType]);
 
   const handleCopy = async () => {
     try {
@@ -41,13 +89,39 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!amount || parseFloat(amount) <= 0) return;
 
-    sendTransaction({
-      to: WALLET_ADDRESS,
-      value: parseEther(amount),
-    });
+    // Switch chain if needed
+    if (chainId !== selectedChainId) {
+      try {
+        await switchChain({ chainId: selectedChainId });
+        // Wait a bit for chain switch to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (err) {
+        console.error("Failed to switch chain:", err);
+        return;
+      }
+    }
+
+    if (tokenType === "native") {
+      sendTransaction({
+        to: WALLET_ADDRESS,
+        value: parseEther(amount),
+      });
+    } else {
+      const usdtAddress = USDT_ADDRESSES[selectedChainId];
+      if (!usdtAddress) return;
+
+      // USDT has 6 decimals on most chains
+      const decimals = selectedChainId === base.id ? 6 : 6; // USDC on Base also has 6 decimals
+      writeContract({
+        address: usdtAddress,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [WALLET_ADDRESS, parseUnits(amount, decimals)],
+      });
+    }
   };
 
   // Show success state
@@ -56,10 +130,23 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
   }
 
   const handleClose = () => {
-    reset();
+    resetNative();
+    resetErc20();
     setTxSuccess(false);
-    setAmount("0.005");
+    setAmount(tokenType === "native" ? "0.005" : "5");
     onClose();
+  };
+
+  const getExplorerUrl = (hash: string) => {
+    const explorers: Record<number, string> = {
+      [mainnet.id]: "https://etherscan.io",
+      [polygon.id]: "https://polygonscan.com",
+      [bsc.id]: "https://bscscan.com",
+      [arbitrum.id]: "https://arbiscan.io",
+      [optimism.id]: "https://optimistic.etherscan.io",
+      [base.id]: "https://basescan.org",
+    };
+    return `${explorers[selectedChainId] || "https://etherscan.io"}/tx/${hash}`;
   };
 
   if (!isOpen) return null;
@@ -73,9 +160,9 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-mint to-emerald-400 p-6 text-ink">
+        <div className="bg-gradient-to-r from-mint to-emerald-400 p-6 text-ink sticky top-0 z-10">
           <button
             onClick={handleClose}
             className="absolute right-4 top-4 rounded-full p-1 transition-colors hover:bg-white/20"
@@ -91,7 +178,7 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
         </div>
 
         {/* Content */}
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-6">
           {txSuccess ? (
             // Success State
             <div className="flex flex-col items-center gap-4 py-8">
@@ -106,7 +193,7 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
               </div>
               {hash && (
                 <a
-                  href={`https://etherscan.io/tx/${hash}`}
+                  href={getExplorerUrl(hash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-mint hover:underline"
@@ -124,49 +211,111 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
           ) : (
             <>
               <p className="text-sm text-ink/70">
-                如果這個 Honeypot Demo 對你有幫助，歡迎請我喝杯咖啡！支援所有 EVM 相容鏈。
+                如果這個 Honeypot Demo 對你有幫助，歡迎請我喝杯咖啡！
               </p>
 
               {/* Direct Transfer Section */}
               {isConnected && (
-                <div className="space-y-3 rounded-xl border-2 border-mint/30 bg-mint/5 p-4">
-                  <label className="flex items-center gap-1 text-xs font-medium text-ink/70">
-                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    快速轉帳（當前網路）
-                  </label>
+                <div className="space-y-4 rounded-xl border-2 border-mint/30 bg-mint/5 p-4">
+                  {/* Chain Selector */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1 text-xs font-medium text-ink/70">
+                      選擇網路
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {SUPPORTED_CHAINS.map((chain) => (
+                        <button
+                          key={chain.id}
+                          onClick={() => setSelectedChainId(chain.id)}
+                          className={`flex flex-col items-center gap-1 rounded-lg p-2 text-xs font-medium transition-all ${
+                            selectedChainId === chain.id
+                              ? `${chain.color} ring-2 ring-offset-1`
+                              : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+                          }`}
+                        >
+                          <span className="text-base">{chain.icon}</span>
+                          <span>{chain.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  {/* Preset amounts */}
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_AMOUNTS.map((preset) => (
+                  {/* Token Type Selector */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1 text-xs font-medium text-ink/70">
+                      選擇代幣
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
                       <button
-                        key={preset}
-                        onClick={() => setAmount(preset)}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
-                          amount === preset
+                        onClick={() => setTokenType("native")}
+                        className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                          tokenType === "native"
                             ? "bg-mint text-ink"
                             : "bg-ink/5 text-ink/70 hover:bg-ink/10"
                         }`}
                       >
-                        {preset} ETH
+                        {selectedChain.native}
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setTokenType("usdt")}
+                        className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                          tokenType === "usdt"
+                            ? "bg-mint text-ink"
+                            : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+                        }`}
+                      >
+                        {selectedChainId === base.id ? "USDC" : "USDT"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preset amounts */}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-1 text-xs font-medium text-ink/70">
+                      金額
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {presetAmounts.map((preset) => (
+                        <button
+                          key={preset}
+                          onClick={() => setAmount(preset)}
+                          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                            amount === preset
+                              ? "bg-mint text-ink"
+                              : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+                          }`}
+                        >
+                          {preset} {tokenType === "native" ? selectedChain.native : (selectedChainId === base.id ? "USDC" : "USDT")}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Custom amount input */}
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      step="0.001"
+                      step={tokenType === "native" ? "0.001" : "1"}
                       min="0"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="自訂金額"
                       className="flex-1 rounded-lg border border-ink/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-mint focus:ring-2 focus:ring-mint/20"
                     />
-                    <span className="text-sm text-ink/50">ETH</span>
+                    <span className="text-sm text-ink/50 min-w-[50px]">
+                      {tokenType === "native" ? selectedChain.native : (selectedChainId === base.id ? "USDC" : "USDT")}
+                    </span>
                   </div>
+
+                  {/* Chain mismatch warning */}
+                  {chainId !== selectedChainId && (
+                    <div className="flex items-center gap-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-700">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>將自動切換到 {selectedChain.name}</span>
+                    </div>
+                  )}
 
                   {/* Send button */}
                   <button
@@ -195,7 +344,7 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
-                        立即轉帳 {amount} ETH
+                        立即轉帳 {amount} {tokenType === "native" ? selectedChain.native : (selectedChainId === base.id ? "USDC" : "USDT")}
                       </>
                     )}
                   </button>
@@ -227,7 +376,7 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
                   <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
-                  錢包地址
+                  錢包地址（支援所有 EVM 鏈）
                 </label>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 break-all rounded-lg border border-ink/10 bg-sand/50 px-3 py-2 font-mono text-[10px] text-ink/70">
@@ -251,21 +400,6 @@ export function SponsorModal({ isOpen, onClose }: SponsorModalProps) {
                       </svg>
                     )}
                   </button>
-                </div>
-              </div>
-
-              {/* Supported Networks */}
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-ink/50">支援的網路</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {SUPPORTED_NETWORKS.map((network) => (
-                    <span
-                      key={network.name}
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${network.color}`}
-                    >
-                      {network.icon} {network.name}
-                    </span>
-                  ))}
                 </div>
               </div>
             </>

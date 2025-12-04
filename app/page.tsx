@@ -30,10 +30,10 @@ function faucet(address to, uint256 amount) external {
 `;
 
 const redFlags = [
-  "transfer / transferFrom 內嵌黑名單或怪條件",
-  "owner 權限保留、可隨時改 blacklist / strictMode",
-  "沒有鎖流動性、流動池可被抽乾",
-  "無上限 faucet / 任意增發"
+  "🕵️‍♂️ 魔改的 transfer 函數：ERC-20 標準轉帳邏輯中，不應該包含複雜的判斷。",
+  "💀 Owner 權限未放棄：如果 Owner 還在，他能否隨時修改黑名單？能否暫停交易？",
+  "🎛️ 隱藏的開關：搜尋 enableTrading, limitSell 等關鍵字。",
+  "🌊 流動性未鎖：項目方隨時可以抽走池子裡的 ETH (Rug Pull)。"
 ];
 
 export default function Home() {
@@ -60,8 +60,8 @@ export default function Home() {
             為什麼貔貅盤能讓你買得進、賣不掉？
           </h1>
           <p className="max-w-3xl text-lg text-ink/80">
-            在 ERC-20 裡，餘額只是 mapping。團隊只要在 <code>transfer</code> 轉出邏輯加阻擋，就能讓你永遠賣不掉。下面用一個
-            honeypot 合約 + 互動前端，直接感受。
+            別被數字騙了。在 Web3 世界，顯示在錢包裡的「餘額」不代表真的屬於你。只要合約在 <code>transfer</code> 函數動了手腳，
+            你的代幣就只是看得到、吃不到的數據。這是一個教育專案，讓你安全地體驗被「割韭菜」的過程。
           </p>
           <div className="flex flex-wrap items-center gap-3 text-sm text-ink/70">
             <span className="rounded-full bg-white/70 px-3 py-1">Sepolia</span>
@@ -100,15 +100,16 @@ export default function Home() {
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink/80">
                 <li>連上錢包（請使用 Sepolia 測試網）。</li>
                 <li>
-                  <span className="font-bold text-ink">買入 (Buy)：</span>
-                  切換到 <strong>ETH → PIXIU</strong> 模式，輸入數量並點擊「立即買入」。這會呼叫 Faucet 免費獲得代幣（模擬買入成功）。
+                  <span className="font-bold text-ink">1. 貪婪的開始 (Buy)：</span>
+                  切換到 <strong>ETH → PIXIU</strong>。看著代幣輕鬆入帳，以為發現了下一個百倍幣 (模擬買入)。
                 </li>
                 <li>
-                  <span className="font-bold text-ink">賣出 (Sell)：</span>
-                  點擊中間箭頭切換為 <strong>PIXIU → ETH</strong> 模式。嘗試將代幣換回 ETH。
+                  <span className="font-bold text-ink">2. 恐慌的瞬間 (Sell)：</span>
+                  切換到 <strong>PIXIU → ETH</strong>。試圖獲利了結時，發現交易被回滾 (Revert)，資產瞬間歸零。
                 </li>
                 <li>
-                  觀察結果：賣出交易會失敗（Revert），下方會出現紅色警告，說明是被「嚴格模式」或「黑名單」攔截。
+                  <span className="font-bold text-ink">3. 真相大白 (Code)：</span>
+                  交易失敗時，<strong>觀察右側程式碼</strong>。惡意邏輯正在閃爍，告訴你為什麼錢出不去。
                 </li>
               </ol>
             </div>
@@ -127,7 +128,7 @@ export default function Home() {
         </section>
 
         <section className="grid gap-4 rounded-3xl bg-ink px-6 py-8 text-sand shadow-lg">
-          <h3 className="text-xl font-semibold">你應該檢查的紅旗</h3>
+          <h3 className="text-xl font-semibold">如何識破騙局？(Red Flags)</h3>
           <ul className="grid gap-2 text-base">
             {redFlags.map((flag) => (
               <li key={flag} className="flex items-start gap-3">

