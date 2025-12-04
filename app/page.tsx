@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Providers } from "./providers";
 import { WalletPanel } from "../components/WalletPanel";
 import { CodeSnippet } from "../components/CodeSnippet";
@@ -27,6 +30,12 @@ const redFlags = [
 ];
 
 export default function Home() {
+  const [highlightError, setHighlightError] = useState<"strict" | "blacklist" | null>(null);
+
+  let highlightKeyword = "";
+  if (highlightError === "strict") highlightKeyword = "strictMode";
+  if (highlightError === "blacklist") highlightKeyword = "blacklist[from]";
+
   return (
     <Providers>
       <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12">
@@ -49,17 +58,29 @@ export default function Home() {
         </header>
 
         <section className="grid gap-6 md:grid-cols-2">
-          <WalletPanel />
+          <WalletPanel onError={setHighlightError} />
           <div className="flex flex-col gap-4">
             <div className="rounded-3xl bg-white/80 p-6 shadow-lg ring-1 ring-ink/10">
               <h2 className="text-2xl font-semibold">互動說明</h2>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink/80">
-                <li>連上錢包（建議 Sepolia）。</li>
-                <li>點「買入 / faucet」拿 PIXIU，會成功。</li>
-                <li>點「嘗試賣出」，轉出會 revert，錯誤訊息顯示「黑名單」或「嚴格模式」。</li>
+                <li>連上錢包（請使用 Sepolia 測試網）。</li>
+                <li>
+                  <span className="font-bold text-ink">買入 (Buy)：</span> 
+                  切換到 <strong>ETH → PIXIU</strong> 模式，輸入數量並點擊「立即買入」。這會呼叫 Faucet 免費獲得代幣（模擬買入成功）。
+                </li>
+                <li>
+                  <span className="font-bold text-ink">賣出 (Sell)：</span> 
+                  點擊中間箭頭切換為 <strong>PIXIU → ETH</strong> 模式。嘗試將代幣換回 ETH。
+                </li>
+                <li>
+                  觀察結果：賣出交易會失敗（Revert），下方會出現紅色警告，說明是被「嚴格模式」或「黑名單」攔截。
+                </li>
               </ol>
             </div>
-            <CodeSnippet title="轉出被攔截的核心">
+            <CodeSnippet 
+              title="轉出被攔截的核心" 
+              highlightKeyword={highlightKeyword}
+            >
               {blacklistSnippet}
             </CodeSnippet>
             <CodeSnippet title="買得進（faucet 代替 swap）">
