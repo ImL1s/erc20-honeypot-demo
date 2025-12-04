@@ -1,11 +1,12 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
+import type { PixiuToken } from "../typechain-types";
 
 describe("PixiuToken", () => {
   it("allows mint/buy but blocks sells when blacklisted", async () => {
     const [owner, user] = await ethers.getSigners();
 
-    const pixiu = await ethers.deployContract("PixiuToken");
+    const pixiu = await ethers.deployContract("PixiuToken") as unknown as PixiuToken;
     await pixiu.waitForDeployment();
 
     // Mimic "buy": anyone can faucet to themselves.
@@ -24,7 +25,7 @@ describe("PixiuToken", () => {
 
   it("blocks everyone when strictMode is on", async () => {
     const [owner, user] = await ethers.getSigners();
-    const pixiu = await ethers.deployContract("PixiuToken");
+    const pixiu = await ethers.deployContract("PixiuToken") as unknown as PixiuToken;
     await pixiu.waitForDeployment();
 
     await pixiu.connect(user).faucet(user.address, ethers.parseEther("1"));
@@ -37,7 +38,7 @@ describe("PixiuToken", () => {
 
   it("allows owner to transfer when not blocked", async () => {
     const [owner, user] = await ethers.getSigners();
-    const pixiu = await ethers.deployContract("PixiuToken");
+    const pixiu = await ethers.deployContract("PixiuToken") as unknown as PixiuToken;
     await pixiu.waitForDeployment();
 
     await pixiu.connect(owner).transfer(user.address, ethers.parseEther("1"));
