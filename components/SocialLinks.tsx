@@ -63,7 +63,7 @@ interface SocialLinksProps {
 export function SocialLinks({ variant = "footer", className = "" }: SocialLinksProps) {
   if (variant === "floating") {
     return (
-      <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 ${className}`}>
+      <div className={`flex items-center gap-2 ${className}`}>
         {socialLinks.map((link) => (
           <a
             key={link.name}

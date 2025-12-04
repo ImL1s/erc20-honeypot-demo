@@ -6,6 +6,7 @@ import { WalletPanel } from "../components/WalletPanel";
 import { CodeSnippet } from "../components/CodeSnippet";
 import { AdBanner } from "../components/AdBanner";
 import { SocialLinks } from "../components/SocialLinks";
+import { SponsorButton } from "../components/SponsorModal";
 import { CONTRACT_ADDRESS } from "../lib/contract";
 
 const ETHERSCAN_URL = `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}#code`;
@@ -44,8 +45,11 @@ export default function Home() {
 
   return (
     <Providers>
-      {/* 右上角浮動社交按鈕 */}
-      <SocialLinks variant="floating" />
+      {/* 右上角浮動按鈕 */}
+      <div className="fixed right-4 top-4 z-40 flex items-center gap-3">
+        <SponsorButton />
+        <SocialLinks variant="floating" />
+      </div>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12">
         <header className="flex flex-col gap-4 rounded-3xl bg-gradient-to-br from-mint/70 via-white to-sand p-8 shadow-xl ring-1 ring-ink/10">
