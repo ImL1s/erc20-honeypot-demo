@@ -1,60 +1,130 @@
-# PIXIU Honeypot Demo (ERC-20)
+# 🍯 ERC-20 貔貅盤 (Honeypot) 互動教學展示
 
-用最小惡意範例說明「貔貅盤：買得進、賣不掉」。合約在轉出邏輯動手腳：黑名單與嚴格模式讓 `transfer` 直接 revert。前端以 wagmi 互動，體驗 faucet（買入）成功、賣出失敗。
+**「為什麼 K 線圖一路向北，但我手裡的幣卻賣不掉？」**
 
-## 合約重點
-- `contracts/PixiuToken.sol`：基於 OpenZeppelin ERC20 + Ownable。
-- `blacklist(address => bool)`：被列入者轉出直接 revert。
-- `strictMode`：全域阻擋轉出，演示「永遠過不了條件」。
-- `faucet(to, amount)`：開放鑄幣（上限 `FAUCET_MAX`），模擬「買得進」。
-- `_update` 內檢查轉出方：非 mint 時若嚴格模式或黑名單即 revert。
+這是一個 **Web3 安全教育專案**，透過一個精心設計的「流動性陷阱（Honeypot）」合約與擬真的 DEX 前端，帶你親身體驗**「買入容易、賣出無門」**的驚悚瞬間。我們不只告訴你原理，更讓你**看見**陷阱被觸發的那一刻。
 
-## 專案結構
-- Hardhat (TypeScript) 在根目錄：`hardhat.config.ts`, `scripts/deploy.ts`, `test/`.
-- 前端 Next.js App Router + wagmi：`app/`, `components/`, `lib/`.
-- 共享設定：`tsconfig.hardhat.json`（Hardhat）、`tailwind.config.js`、`.eslintrc.json`。
+---
 
-## 安裝與環境
-```bash
-npm install
-cp .env.example .env
-# 設定以下環境變數
-# SEPOLIA_RPC_URL, DEPLOYER_KEY, ETHERSCAN_API_KEY(可選), NEXT_PUBLIC_CONTRACT_ADDRESS
+## 🎯 核心體驗
+
+我們打造了一個**擬真的 Swap 介面**，讓你安全地體驗詐騙盤的運作機制：
+
+### 1. 貪婪的開始 (Buy / Faucet) 🤑
+*   切換到 **ETH → PIXIU** 模式。
+*   點擊「立即買入」，你會發現交易無比順暢，代幣輕鬆入帳。
+*   *(背後機制：其實是呼叫 `faucet` 免費鑄造，模擬項目方讓你輕鬆上車)*
+
+### 2. 恐慌的瞬間 (Sell / Trap) 😱
+*   切換到 **PIXIU → ETH** 模式，試圖獲利了結。
+*   點擊「確認賣出」—— **Boom! 交易失敗 (Revert)**。
+*   你會看見紅色的警告：「交易失敗：你已被列入黑名單」。
+
+### 3. 真相大白 (Code Highlight) 💡
+*   **這就是本專案最強大的功能**：
+*   當你的交易被阻擋時，網頁右側的 Solidity 程式碼會**自動高亮閃爍**。
+*   系統會直接指給你看：「看！就是這行 `if (blacklist[from])` 殺死了你的交易。」
+
+---
+
+## 🕵️‍♂️ 惡意機制揭秘
+
+這個專案展示了兩種最經典的貔貅手段：
+
+| 機制 | 描述 | 體驗方式 |
+|------|------|----------|
+| **黑名單 (Blacklist)** | 針對特定地址進行封鎖。通常在用戶買入時，合約會自動將其加入黑名單。 | 預設開啟，任何新用戶嘗試轉出都會觸發。 |
+| **嚴格模式 (Strict Mode)** | 項目方的一鍵必殺技。開啟後，全網暫停轉帳（除了白名單與 Owner）。 | 合約內建開關，演示「永遠過不了的條件」。 |
+
+**💀 致命代碼 (`contracts/PixiuToken.sol`)：**
+
+```solidity
+function _update(address from, address to, uint256 amount) internal override {
+    // 這裡就是陷阱！
+    if (from != address(0)) { // 如果不是鑄幣（買入）
+        // 🔴 嚴格模式：一鍵關門，誰都別想跑
+        if (strictMode) revert("Sell blocked: strict");
+        
+        // ⚫ 黑名單：你買入的那一刻，就已經被鎖定了
+        if (blacklist[from]) revert("Sell blocked: blacklisted");
+    }
+    super._update(from, to, amount);
+}
 ```
 
-## Hardhat 指令
-- 測試（已通過）：`npm run test`
-- 本地節點：`npx hardhat node`
-- 部署到 Sepolia：`npm run deploy:sepolia`
-  - 部署後會輸出地址，填入 `.env` 的 `NEXT_PUBLIC_CONTRACT_ADDRESS`
-- 驗證（可選）：`npx hardhat verify --network sepolia <contractAddress>`
+---
 
-## 前端啟動
+## 🚩 你該如何自保？(Red Flags)
+
+在衝土狗（Meme coin）或投資新項目之前，請務必檢查合約是否包含以下特徵：
+
+1.  **魔改的 `transfer` 函數**：ERC-20 標準轉帳邏輯中，不應該包含複雜的 `if/else` 判斷。
+2.  **Owner 權限未放棄**：如果 Owner 還在，他能否隨時修改黑名單？能否暫停交易？
+3.  **隱藏的開關**：搜尋 `enableTrading`、`limitSell`、`maxTxAmount` 等關鍵字，這些都可能是限制你出貨的參數。
+4.  **蜜罐檢測工具**：使用 Token Sniffer 或 GoPlus 等工具掃描合約安全性。
+
+---
+
+## 🛠️ 技術架構
+
+*   **智能合約**: Solidity 0.8.24, Hardhat, OpenZeppelin (ERC20 + Ownable)
+*   **現代化前端**: Next.js 16 (App Router), React 19, Tailwind CSS
+*   **Web3 整合**: Wagmi v3, Viem, TanStack Query
+*   **自動化測試**: Hardhat (Unit Tests), Playwright (E2E Tests)
+
+---
+
+## 🚀 快速開始
+
+### 1. 安裝與設定
+
+```bash
+git clone https://github.com/ImL1s/erc20-honeypot-demo.git
+cd erc20-honeypot-demo
+npm install
+
+# 設定環境變數
+cp .env.example .env
+# 填入你的 SEPOLIA_RPC_URL 和 DEPLOYER_KEY
+```
+
+### 2. 部署合約 (Sepolia)
+
+```bash
+npm run deploy:sepolia
+# 部署成功後，終端機會顯示合約地址
+# 請將地址填入 .env 的 NEXT_PUBLIC_CONTRACT_ADDRESS
+```
+
+### 3. 啟動前端
+
 ```bash
 npm run dev
-# 瀏覽 http://localhost:3000
+# 開啟 http://localhost:3000 開始體驗
 ```
-互動步驟：
-1) 錢包連到 Sepolia。
-2) 點「買入 / faucet」取得 PIXIU（成功）。
-3) 點「嘗試賣出」轉回合約 owner（視為賣出），會因黑名單或嚴格模式 revert，UI 顯示錯誤訊息。
 
-## Lint / E2E 測試
-- Lint：`npm run lint`（使用 eslint + eslint-config-next）。
-- E2E：`npm run test:e2e`（Playwright，預設自啟開發伺服器在 3002）。
-  - 若本機已跑 `npm run dev` 在 3001，可重用：
+---
+
+## 🧪 測試指令
+
+我們包含了完整的測試套件來確保演示的正確性：
+
+*   **合約單元測試**：驗證黑名單邏輯是否如預期般運作（買得進、賣不掉）。
     ```bash
-    PLAYWRIGHT_USE_EXISTING_SERVER=1 PLAYWRIGHT_BASE_URL=http://localhost:3001 npm run test:e2e
+    npm run test
+    ```
+*   **E2E 整合測試**：使用 Playwright 模擬真實瀏覽器操作，測試前端與合約的互動。
+    ```bash
+    npm run test:e2e
     ```
 
-## 風險提示 / 要檢查的紅旗
-- `transfer/transferFrom` 內嵌黑名單或怪條件。
-- owner 權限未移除，可隨時開啟黑名單或嚴格模式。
-- 流動性未鎖、可抽走。
-- 任意增發或無上限 faucet。
+---
 
-## 版本
-- Node: 請用 LTS 以上
-- Hardhat: 2.27.x
-- Solidity: 0.8.24
-- Next.js: 16
+## ⚠️ 免責聲明
+
+本專案僅供**教育與研究用途**，旨在提升開發者與用戶對區塊鏈安全的認識。請勿將相關代碼用於欺詐、惡意攻擊或任何非法用途。
+
+在區塊鏈世界中，**保持懷疑，永遠驗證 (Don't trust, verify)**。
+
+---
+*Built with ☕ and 🍯 for Web3 Security Education*

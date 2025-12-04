@@ -1,0 +1,21 @@
+{
+  "name": "PIXIU Honeypot Demo",
+  "short_name": "Honeypot Demo",
+  "description": "互動式 ERC-20 蜜罐教學，體驗貔貅盤「買得進、賣不掉」的陷阱機制",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f4e9",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

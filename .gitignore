@@ -9,3 +9,5 @@ coverage
 typechain-types
 npm-debug.log*
 *.tsbuildinfo
+.vercel
+firebase-debug.log

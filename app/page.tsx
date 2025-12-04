@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Providers } from "./providers";
 import { WalletPanel } from "../components/WalletPanel";
 import { CodeSnippet } from "../components/CodeSnippet";
+import { AdBanner } from "../components/AdBanner";
+import { SocialLinks } from "../components/SocialLinks";
 
 const blacklistSnippet = `
 function _update(address from, address to, uint256 amount) internal override {
@@ -38,6 +40,9 @@ export default function Home() {
 
   return (
     <Providers>
+      {/* 右上角浮動社交按鈕 */}
+      <SocialLinks variant="floating" />
+
       <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12">
         <header className="flex flex-col gap-4 rounded-3xl bg-gradient-to-br from-mint/70 via-white to-sand p-8 shadow-xl ring-1 ring-ink/10">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ink/70">
@@ -65,11 +70,11 @@ export default function Home() {
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink/80">
                 <li>連上錢包（請使用 Sepolia 測試網）。</li>
                 <li>
-                  <span className="font-bold text-ink">買入 (Buy)：</span> 
+                  <span className="font-bold text-ink">買入 (Buy)：</span>
                   切換到 <strong>ETH → PIXIU</strong> 模式，輸入數量並點擊「立即買入」。這會呼叫 Faucet 免費獲得代幣（模擬買入成功）。
                 </li>
                 <li>
-                  <span className="font-bold text-ink">賣出 (Sell)：</span> 
+                  <span className="font-bold text-ink">賣出 (Sell)：</span>
                   點擊中間箭頭切換為 <strong>PIXIU → ETH</strong> 模式。嘗試將代幣換回 ETH。
                 </li>
                 <li>
@@ -77,8 +82,8 @@ export default function Home() {
                 </li>
               </ol>
             </div>
-            <CodeSnippet 
-              title="轉出被攔截的核心" 
+            <CodeSnippet
+              title="轉出被攔截的核心"
               highlightKeyword={highlightKeyword}
             >
               {blacklistSnippet}
@@ -86,6 +91,8 @@ export default function Home() {
             <CodeSnippet title="買得進（faucet 代替 swap）">
               {faucetSnippet}
             </CodeSnippet>
+            {/* 側邊廣告位 - 放在說明區塊下方 */}
+            <AdBanner slot="sidebar" className="mt-2" />
           </div>
         </section>
 
@@ -100,6 +107,21 @@ export default function Home() {
             ))}
           </ul>
         </section>
+
+        {/* 底部廣告位 */}
+        <section className="flex justify-center">
+          <AdBanner slot="footer" />
+        </section>
+
+        {/* Footer 社交連結與版權 */}
+        <footer className="flex flex-col items-center gap-6 border-t border-ink/10 pt-10">
+          <SocialLinks variant="footer" />
+          <p className="text-center text-xs text-ink/40">
+            本專案僅供教育與研究用途，旨在提升 Web3 安全意識。
+            <br />
+            Don&apos;t trust, verify.
+          </p>
+        </footer>
       </main>
     </Providers>
   );
