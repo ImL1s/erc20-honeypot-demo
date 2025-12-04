@@ -15,6 +15,7 @@ import {
 import { sepolia } from "wagmi/chains";
 import { formatEther, parseEther } from "viem";
 import { CONTRACT_ADDRESS, pixiuAbi } from "../lib/contract";
+import { useLocale } from "./LocaleProvider";
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
@@ -31,13 +32,14 @@ const CopyIcon = () => (
   </svg>
 );
 
-export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklist" | null) => void }) {
+export function WalletPanel({ onError }: { onError?: (type: "blacklist" | null) => void }) {
   const { address, isConnected, chain } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
-  
+  const { t } = useLocale();
+
   const { data: ethBalance } = useBalance({ address });
 
   const { writeContractAsync, isPending: writePending } = useWriteContract();
@@ -150,19 +152,15 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
     } catch (err: any) {
       const msg = err?.message || "";
       console.error(err);
-      
-      if (msg.includes("Sell blocked: strict")) {
-        setError("交易失敗：嚴格模式已開啟 (Strict Mode)");
-        setErrorType("strict");
-        onError?.("strict");
-      } else if (msg.includes("Sell blocked: blacklisted")) {
-        setError("交易失敗：你已被列入黑名單 (Blacklisted)");
+
+      if (msg.includes("Sell blocked: blacklisted")) {
+        setError(t("wallet.errors.blacklist") as string);
         setErrorType("blacklist");
         onError?.("blacklist");
       } else if (msg.includes("User rejected")) {
-        setError("使用者取消交易");
+        setError(t("wallet.errors.rejected") as string);
       } else {
-        setError(err?.shortMessage || "交易失敗");
+        setError((err?.shortMessage as string) || (t("wallet.errors.unknown") as string));
         setErrorType("unknown");
       }
     }
@@ -186,6 +184,9 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
       <div className="flex items-center justify-between mb-2">
         {isConnected ? (
           <div className="flex flex-col gap-1 w-full">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              {t("wallet.yourWallet") as string}
+            </div>
             <div className="flex items-center justify-between">
                {chainId !== sepolia.id ? (
                  <div className="flex items-center gap-2 w-full justify-between bg-red-50 p-2 rounded-lg border border-red-100">
@@ -193,13 +194,13 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-sm font-bold">Wrong Network</span>
+                      <span className="text-sm font-bold">{t("wallet.wrongNetwork") as string}</span>
                     </div>
                     <button 
                       onClick={() => switchChain({ chainId: sepolia.id })}
                       className="rounded-md bg-red-600 px-3 py-1 text-xs font-bold text-white hover:bg-red-700 shadow-sm"
                     >
-                      Switch to Sepolia
+                      {t("wallet.switchToSepolia") as string}
                     </button>
                  </div>
                ) : (
@@ -211,7 +212,7 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
                       <span className="text-sm font-semibold text-slate-700">{chain?.name || "Sepolia"}</span>
                    </div>
                    <button onClick={() => disconnect()} className="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors">
-                     斷開
+                     {t("wallet.disconnect") as string}
                    </button>
                  </>
                )}
@@ -228,22 +229,25 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
                       {address?.slice(0, 6)}...{address?.slice(-4)}
                       <CopyIcon />
                     </button>
-                    <span className="text-[10px] text-slate-400 font-medium tracking-wide mt-0.5">WALLET</span>
+                    <span className="text-[10px] text-slate-400 font-medium tracking-wide mt-0.5">{t("wallet.walletTag") as string}</span>
                  </div>
                  <div className="text-right">
                     <div className="text-sm font-bold text-slate-800">
                       {ethBalance ? parseFloat(formatEther(ethBalance.value)).toFixed(4) : "0.0000"} <span className="text-xs text-slate-500">ETH</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium tracking-wide">BALANCE</span>
+                    <span className="text-[10px] text-slate-400 font-medium tracking-wide">{t("wallet.balanceTag") as string}</span>
                  </div>
               </div>
             )}
           </div>
         ) : (
            <div className="flex items-center justify-between w-full">
+             <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+               {t("wallet.yourWallet") as string}
+             </div>
              <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
                 <div className="h-2 w-2 rounded-full bg-slate-300" />
-                <span>未連線</span>
+                <span>{t("wallet.disconnected") as string}</span>
              </div>
              <div className="flex gap-1">
                 {connectors.slice(0,2).map((connector) => (
@@ -252,7 +256,7 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
                     onClick={() => connect({ connector })}
                     className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-700"
                   >
-                    連線 {connector.name}
+                    {t("wallet.connectWith", { name: connector.name }) as string}
                   </button>
                 ))}
               </div>
@@ -266,8 +270,8 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
         {/* Top Input (From) */}
         <div className="rounded-2xl bg-slate-100 p-4 transition hover:bg-slate-50 border border-transparent hover:border-slate-200">
           <div className="flex justify-between mb-1">
-             <label className="text-xs font-semibold text-slate-500">支付 (From)</label>
-             {mode === "sell" && <span className="text-xs text-slate-500">餘額: {balance}</span>}
+             <label className="text-xs font-semibold text-slate-500">{t("wallet.payFrom") as string}</label>
+             {mode === "sell" && <span className="text-xs text-slate-500">{t("wallet.balanceLabel") as string}: {balance}</span>}
           </div>
           <div className="flex items-center gap-3">
              <input
@@ -296,8 +300,8 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
         {/* Bottom Input (To) */}
         <div className="rounded-2xl bg-slate-100 p-4 transition hover:bg-slate-50 border border-transparent hover:border-slate-200">
            <div className="flex justify-between mb-1">
-             <label className="text-xs font-semibold text-slate-500">收到 (To)</label>
-             {mode === "buy" && <span className="text-xs text-slate-500">餘額: {balance}</span>}
+             <label className="text-xs font-semibold text-slate-500">{t("wallet.receiveTo") as string}</label>
+             {mode === "buy" && <span className="text-xs text-slate-500">{t("wallet.balanceLabel") as string}: {balance}</span>}
           </div>
           <div className="flex items-center gap-3">
              <input
@@ -316,8 +320,8 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
 
       {/* Price Impact / Info */}
       <div className="flex justify-between px-2 text-xs font-medium text-slate-500">
-        <span>匯率 (模擬)</span>
-        <span>1 ETH = ∞ PIXIU</span>
+        <span>{t("wallet.rateLabel") as string}</span>
+        <span>{t("wallet.rateValue") as string}</span>
       </div>
 
       {/* Action Button */}
@@ -331,7 +335,11 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
         `}
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
-           {writePending ? "處理中..." : mode === "buy" ? "立即買入 (Faucet)" : "確認賣出"}
+           {writePending
+             ? (t("wallet.actions.processing") as string)
+             : mode === "buy"
+             ? (t("wallet.actions.buy") as string)
+             : (t("wallet.actions.sell") as string)}
         </span>
       </button>
 
@@ -341,11 +349,11 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
           <div className="flex items-start gap-3">
             <div className="mt-0.5 text-2xl">🚨</div>
             <div>
-              <h4 className="font-bold text-red-900">交易失敗 (Honeypot!)</h4>
+              <h4 className="font-bold text-red-900">{t("wallet.errors.title") as string}</h4>
               <p className="text-sm text-red-800 mt-1 font-medium">{error}</p>
               <p className="text-xs text-red-600 mt-2 leading-relaxed opacity-80">
-                {errorType === "strict" && "這就是「嚴格模式」：合約中的 strictMode 變數為 true，直接阻擋任何轉出操作。"}
-                {errorType === "blacklist" && "這就是「黑名單機制」：你的地址被標記在 blacklist 中，無法進行轉帳。"}
+                {errorType === "strict" && (t("wallet.errors.strictHint") as string)}
+                {errorType === "blacklist" && (t("wallet.errors.blacklistHint") as string)}
               </p>
             </div>
           </div>
@@ -354,16 +362,16 @@ export function WalletPanel({ onError }: { onError?: (type: "strict" | "blacklis
 
       {/* Status Indicators */}
       <div className="grid grid-cols-2 gap-2 mt-2">
-         <div className={`rounded-lg p-2 text-center text-xs font-bold ${strictModeQuery.data ? "bg-orange-100 text-orange-700 ring-1 ring-orange-200" : "bg-slate-100 text-slate-400"}`}>
-            嚴格模式: {strictModeQuery.data ? "開啟 (ON)" : "關閉"}
-         </div>
          <div className={`rounded-lg p-2 text-center text-xs font-bold ${blacklistQuery.data ? "bg-red-100 text-red-700 ring-1 ring-red-200" : "bg-slate-100 text-slate-400"}`}>
-            黑名單: {blacklistQuery.data ? "YES" : "NO"}
+            {blacklistQuery.data ? (t("wallet.status.blacklistYes") as string) : (t("wallet.status.blacklistNo") as string)}
+         </div>
+         <div className={`rounded-lg p-2 text-center text-xs font-bold ${strictModeQuery.data ? "bg-orange-100 text-orange-700 ring-1 ring-orange-200" : "bg-slate-100 text-slate-400"}`}>
+            {strictModeQuery.data ? (t("wallet.status.strictOn") as string) : (t("wallet.status.strictOff") as string)}
          </div>
       </div>
 
       {!hasContract && (
-         <p className="text-center text-xs text-slate-400">Contract not configured</p>
+         <p className="text-center text-xs text-slate-400">{t("wallet.status.contractMissing") as string}</p>
       )}
     </div>
   );
