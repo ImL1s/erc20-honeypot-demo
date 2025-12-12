@@ -10,9 +10,13 @@ module.exports = {
         display: ["'Space Grotesk'", "ui-sans-serif", "system-ui"]
       },
       colors: {
-        ink: "#0f172a",
-        mint: "#5ef3d0",
-        sand: "#f8f4e9"
+        ink: "#4b5563", // Pencil Grey / Soft Text
+        surface: "#ffffff", // Watercolor Paper White
+        mint: "#86efac", // Fresh Grass / Safe
+        danger: "#fda4af", // Soft Red / Warnings (Pastel Red)
+        sand: "#fdfcf8", // Cream / Cloud
+        wood: "#92400e", // Earthy accents
+        sky: "#bae6fd", // Sky Blue
       }
     }
   },
