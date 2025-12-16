@@ -10,4 +10,7 @@ typechain-types
 npm-debug.log*
 *.tsbuildinfo
 .vercel
-firebase-debug.log
+firebase-debug.log*
+test-results/
+playwright-report/
+.gemini-clipboard/

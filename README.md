@@ -1,11 +1,15 @@
-# 🍯 ERC-20 貔貅盤 (Honeypot) - The Beautiful Trap
-![Honeypot Banner](banner.png)
+![ERC20 Honeypot Banner](erc20_honeypot_demo_banner_1765865511442.png)
+
+# 🍯 ERC-20 貔貅盤 (Honeypot) 互動教學展示
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-blue)](https://soliditylang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+
 
 **「為什麼 K 線圖一路向北，但我手裡的幣卻賣不掉？」**
 
-這是一個 **Web3 安全教育專案**，透過一個**吉卜力風格 (Studio Ghibli Style)** 的優美介面，包裝一個致命的「流動性陷阱（Honeypot）」合約。我們希望展示：**越美麗的陷阱，越令人防不勝防**。
-
-本專案帶你體驗**「買入容易、賣出無門」**的驚悚瞬間，並讓你**看見**陷阱被觸發的那一刻。
+這是一個 **Web3 安全教育專案**，透過一個精心設計的「流動性陷阱（Honeypot）」合約與擬真的 DEX 前端，帶你親身體驗**「買入容易、賣出無門」**的驚悚瞬間。我們不只告訴你原理，更讓你**看見**陷阱被觸發的那一刻。
 
 ---
 
@@ -79,7 +83,37 @@ function _update(address from, address to, uint256 amount) internal override {
 
 ## 🚀 快速開始
 
-### 1. 安裝與設定
+### 方式 1：使用已部署的測試網合約（推薦）
+
+最快速的體驗方式！直接使用已部署在 Sepolia 測試網的合約：
+
+```bash
+git clone https://github.com/ImL1s/erc20-honeypot-demo.git
+cd erc20-honeypot-demo
+npm install
+
+# 複製環境變數配置
+cp .env.example .env
+
+# 編輯 .env 文件，修改以下變數：
+# NEXT_PUBLIC_CONTRACT_ADDRESS=0xCCc778D23992e398a937aA6e1a9F3dBAfE10e4ec
+# (DEPLOYER_KEY 和 ETHERSCAN_API_KEY 不需要填寫)
+
+# 啟動前端
+npm run dev
+# 開啟 http://localhost:3000 開始體驗
+```
+
+**已部署的合約資訊**：
+- 📋 **合約地址**: `0xCCc778D23992e398a937aA6e1a9F3dBAfE10e4ec`
+- 🌐 **網絡**: Sepolia Testnet
+- 🔍 **Etherscan**: [https://sepolia.etherscan.io/address/0xCCc778D23992e398a937aA6e1a9F3dBAfE10e4ec](https://sepolia.etherscan.io/address/0xCCc778D23992e398a937aA6e1a9F3dBAfE10e4ec)
+
+---
+
+### 方式 2：自行部署合約（進階）
+
+如果您想學習完整的部署流程：
 
 ```bash
 git clone https://github.com/ImL1s/erc20-honeypot-demo.git
@@ -88,10 +122,13 @@ npm install
 
 # 設定環境變數
 cp .env.example .env
-# 填入你的 SEPOLIA_RPC_URL 和 DEPLOYER_KEY
+# 編輯 .env 文件，填入：
+# - SEPOLIA_RPC_URL: 您的 Sepolia RPC URL
+# - DEPLOYER_KEY: 您的測試網私鑰 (⚠️ 僅用於測試網！)
+# - ETHERSCAN_API_KEY: 您的 Etherscan API Key (免費申請)
 ```
 
-### 2. 部署合約 (Sepolia)
+**部署合約到 Sepolia 測試網**：
 
 ```bash
 npm run deploy:sepolia
@@ -99,12 +136,16 @@ npm run deploy:sepolia
 # 請將地址填入 .env 的 NEXT_PUBLIC_CONTRACT_ADDRESS
 ```
 
-### 3. 啟動前端
+**啟動前端**：
 
 ```bash
 npm run dev
 # 開啟 http://localhost:3000 開始體驗
 ```
+
+**如何獲取測試 ETH**：
+- Sepolia Faucet: https://faucet.sepolia.dev/
+- Alchemy Faucet: https://sepoliafaucet.com/
 
 ---
 
@@ -120,6 +161,25 @@ npm run dev
     ```bash
     npm run test:e2e
     ```
+
+---
+
+---
+
+## 🔒 安全提醒
+
+本項目包含測試用智能合約，**請勿在主網使用**！詳細安全指南請參閱 [SECURITY.md](SECURITY.md)。
+
+**關鍵提醒**：
+- 僅使用測試網錢包和測試 ETH
+- 從 [Sepolia Faucet](https://faucet.sepolia.dev/) 獲取免費測試幣
+- 切勿提交包含私鑰的 `.env` 文件
+
+---
+
+## 📄 許可證
+
+本項目採用 [MIT License](LICENSE) 開源。
 
 ---
 

@@ -10,7 +10,7 @@ interface CodeSnippetProps {
 
 export function CodeSnippet({ title, children, highlightKeyword }: CodeSnippetProps) {
   const [copied, setCopied] = useState(false);
-
+  
   const copy = async () => {
     if (typeof window === "undefined") return;
     await navigator.clipboard.writeText(children);
@@ -21,44 +21,38 @@ export function CodeSnippet({ title, children, highlightKeyword }: CodeSnippetPr
   const lines = children.trim().split("\n");
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#fffcf5] shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-stone-200 transition-all hover:shadow-lg">
-      <div className="absolute top-0 h-1 w-full bg-gradient-to-r from-orange-200 via-yellow-200 to-orange-200 opacity-50" />
-
-      <div className="flex items-center justify-between border-b border-stone-100 bg-stone-50/50 px-5 py-3">
-        <span className="flex items-center gap-2 text-sm font-bold text-stone-600">
-          {highlightKeyword && <span className="animate-pulse text-red-400">●</span>}
+    <div className="rounded-2xl bg-white/90 p-4 shadow-lg ring-1 ring-ink/10 backdrop-blur transition-all">
+      <div className="mb-3 flex items-center justify-between text-sm font-semibold uppercase tracking-wide text-ink/70">
+        <span className="flex items-center gap-2">
+          {highlightKeyword && <span className="animate-pulse text-red-500">●</span>}
           {title}
         </span>
         <button
           onClick={copy}
-          className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-stone-500 shadow-sm ring-1 ring-stone-200 hover:bg-stone-50 transition-colors"
+          className="rounded-full bg-ink px-3 py-1 text-xs font-medium text-sand hover:bg-ink/90 transition-colors"
         >
-          {copied ? "✨" : "📋"}
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
-
-      <pre className="overflow-x-auto bg-[#fffcf5] p-2 text-sm text-stone-700 scrollbar-thin scrollbar-thumb-stone-200">
-        <code className="block font-mono">
+      <pre className="overflow-x-auto rounded-lg bg-ink text-sm text-sand shadow-inner">
+        <code className="block py-3">
           {lines.map((line, i) => {
             const isHighlighted = highlightKeyword && line.includes(highlightKeyword);
             return (
               <div
                 key={i}
-                className={`px-3 py-1 transition-colors duration-500 border-l-[3px] ${isHighlighted
-                    ? "bg-red-50 border-red-400 text-red-800 font-bold"
-                    : "border-transparent hover:bg-stone-50"
-                  }`}
+                className={`px-4 py-0.5 font-mono transition-colors duration-500 ${
+                  isHighlighted
+                    ? "bg-red-500/30 text-red-100 font-bold border-l-4 border-red-500"
+                    : "border-l-4 border-transparent opacity-80"
+                }`}
               >
-                {/* Visual line number */}
-                <span className="inline-block w-6 select-none text-right text-xs text-stone-300 mr-3">{i + 1}</span>
                 {line}
               </div>
             );
           })}
         </code>
       </pre>
-
-      <div className="absolute bottom-0 h-2 w-full bg-gradient-to-t from-stone-50 to-transparent opacity-50" />
     </div>
   );
 }

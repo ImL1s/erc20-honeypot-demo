@@ -76,7 +76,44 @@ const translations: Record<Locale, Messages> = {
         contractMissing: "尚未設定合約地址"
       }
     },
-    switcherLabel: "語言"
+    switcherLabel: "語言",
+    scamTypes: {
+      honeypot: {
+        short: "貔貅盤",
+        name: "貔貅盤 (Honeypot)",
+        description: "買入時自動加入黑名單，無法轉出代幣。經典的「買得進、賣不掉」陷阱。",
+        tag: "黑名單詐騙",
+        errorHint: "你的地址被加入黑名單了！這就是貔貅盤的運作方式。"
+      },
+      hiddenFee: {
+        short: "隱藏手續費",
+        name: "隱藏手續費 (Hidden Fee)",
+        description: "買入時 0% 手續費，賣出時收取高達 90% 的隱藏手續費。你以為賺到了，其實 90% 被扣走。",
+        tag: "手續費詐騙",
+        errorHint: "賣出時被收取了 90% 的手續費！只有 10% 到帳。"
+      },
+      tradingSwitch: {
+        short: "交易開關",
+        name: "交易開關 (Trading Switch)",
+        description: "Owner 可以隨時關閉交易功能。當你想賣出時，交易已被關閉。",
+        tag: "開關詐騙",
+        errorHint: "交易已被關閉！Owner 可以隨時開關交易功能。"
+      },
+      maxTx: {
+        short: "交易限額",
+        name: "交易限額 (Max Tx Limit)",
+        description: "設定極低的交易限額（甚至為 0），讓你無法轉出任何代幣。",
+        tag: "限額詐騙",
+        errorHint: "交易限額為 0！你無法轉出任何代幣。"
+      },
+      cooldown: {
+        short: "冷卻時間",
+        name: "冷卻時間 (Cooldown Trap)",
+        description: "買入後設定超長冷卻時間（如 365 天），實際上永遠無法賣出。",
+        tag: "冷卻詐騙",
+        errorHint: "冷卻時間為 365 天！實際上永遠無法賣出。"
+      }
+    }
   },
   "zh-Hans": {
     home: {
@@ -148,7 +185,44 @@ const translations: Record<Locale, Messages> = {
         contractMissing: "尚未设定合约地址"
       }
     },
-    switcherLabel: "语言"
+    switcherLabel: "语言",
+    scamTypes: {
+      honeypot: {
+        short: "貔貅盘",
+        name: "貔貅盘 (Honeypot)",
+        description: "买入时自动加入黑名单，无法转出代币。经典的「买得进、卖不掉」陷阱。",
+        tag: "黑名单诈骗",
+        errorHint: "你的地址被加入黑名单了！这就是貔貅盘的运作方式。"
+      },
+      hiddenFee: {
+        short: "隐藏手续费",
+        name: "隐藏手续费 (Hidden Fee)",
+        description: "买入时 0% 手续费，卖出时收取高达 90% 的隐藏手续费。",
+        tag: "手续费诈骗",
+        errorHint: "卖出时被收取了 90% 的手续费！只有 10% 到账。"
+      },
+      tradingSwitch: {
+        short: "交易开关",
+        name: "交易开关 (Trading Switch)",
+        description: "Owner 可以随时关闭交易功能。当你想卖出时，交易已被关闭。",
+        tag: "开关诈骗",
+        errorHint: "交易已被关闭！Owner 可以随时开关交易功能。"
+      },
+      maxTx: {
+        short: "交易限额",
+        name: "交易限额 (Max Tx Limit)",
+        description: "设定极低的交易限额（甚至为 0），让你无法转出代币。",
+        tag: "限额诈骗",
+        errorHint: "交易限额为 0！你无法转出任何代币。"
+      },
+      cooldown: {
+        short: "冷却时间",
+        name: "冷却时间 (Cooldown Trap)",
+        description: "买入后设定超长冷却时间（如 365 天），实际上永远无法卖出。",
+        tag: "冷却诈骗",
+        errorHint: "冷却时间为 365 天！实际上永远无法卖出。"
+      }
+    }
   },
   en: {
     home: {
@@ -220,7 +294,44 @@ const translations: Record<Locale, Messages> = {
         contractMissing: "Contract not configured"
       }
     },
-    switcherLabel: "Language"
+    switcherLabel: "Language",
+    scamTypes: {
+      honeypot: {
+        short: "Honeypot",
+        name: "Honeypot (Blacklist)",
+        description: "Auto-blacklists buyers on purchase. Classic 'buy works, sell blocked' trap.",
+        tag: "Blacklist Scam",
+        errorHint: "Your address is blacklisted! This is how honeypots work."
+      },
+      hiddenFee: {
+        short: "Hidden Fee",
+        name: "Hidden Fee (Tax Scam)",
+        description: "0% buy fee, but 90% sell fee. You think you're profiting, but 90% is taken.",
+        tag: "Fee Scam",
+        errorHint: "90% sell fee charged! Only 10% reaches you."
+      },
+      tradingSwitch: {
+        short: "Trading Switch",
+        name: "Trading Switch (Kill Switch)",
+        description: "Owner can disable trading anytime. When you try to sell, trading is off.",
+        tag: "Switch Scam",
+        errorHint: "Trading is disabled! Owner controls the switch."
+      },
+      maxTx: {
+        short: "Max Tx Limit",
+        name: "Max Transaction Limit",
+        description: "Sets max transaction to 0, preventing any token transfers.",
+        tag: "Limit Scam",
+        errorHint: "Max transaction is 0! You cannot transfer any tokens."
+      },
+      cooldown: {
+        short: "Cooldown",
+        name: "Cooldown Trap",
+        description: "Sets 365-day cooldown. You effectively can never sell.",
+        tag: "Cooldown Scam",
+        errorHint: "365-day cooldown! You can never actually sell."
+      }
+    }
   },
   ja: {
     home: {
@@ -292,7 +403,44 @@ const translations: Record<Locale, Messages> = {
         contractMissing: "コントラクト未設定"
       }
     },
-    switcherLabel: "言語"
+    switcherLabel: "言語",
+    scamTypes: {
+      honeypot: {
+        short: "ハニーポット",
+        name: "ハニーポット (Blacklist)",
+        description: "購入時に自動でブラックリスト登録。「買えるけど売れない」典型的な罠。",
+        tag: "ブラックリスト詐欺",
+        errorHint: "あなたのアドレスはブラックリストに登録されました！"
+      },
+      hiddenFee: {
+        short: "隠し手数料",
+        name: "隠し手数料 (Hidden Fee)",
+        description: "買い手数料 0%、売り手数料 90%。利益が出たと思ったら 90% 取られる。",
+        tag: "手数料詐欺",
+        errorHint: "売却時に 90% の手数料！10% しか受け取れません。"
+      },
+      tradingSwitch: {
+        short: "取引スイッチ",
+        name: "取引スイッチ (Kill Switch)",
+        description: "オーナーがいつでも取引を無効化可能。売ろうとしたら取引停止。",
+        tag: "スイッチ詐欺",
+        errorHint: "取引が無効化されています！オーナーがスイッチを制御。"
+      },
+      maxTx: {
+        short: "最大取引制限",
+        name: "最大取引制限 (Max Tx)",
+        description: "最大取引量を 0 に設定し、トークン転送を完全にブロック。",
+        tag: "制限詐欺",
+        errorHint: "最大取引量が 0！トークンを転送できません。"
+      },
+      cooldown: {
+        short: "クールダウン",
+        name: "クールダウントラップ",
+        description: "365 日間のクールダウン。実質的に永久に売却不可。",
+        tag: "クールダウン詐欺",
+        errorHint: "365 日間のクールダウン！実際には売却不可能。"
+      }
+    }
   }
 };
 
